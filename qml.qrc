@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>SpecterChart.qml</file>
+        <file>VerticalRuler.qml</file>
+        <file>HorizontalRuler.qml</file>
+        <file>SettingsMenu.qml</file>
+        <file>VISA_Settings.qml</file>
+        <file>Markers.qml</file>
+        <file>HorizontalDistanceMarker.qml</file>
+        <file>Start_Dialog.qml</file>
+    </qresource>
+</RCC>
