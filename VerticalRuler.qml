@@ -11,12 +11,12 @@ Item {
 
     property int hide_duration: 150
 
-    property int space: Math.round(Screen.pixelDensity*5)
+    property int space: pixel_density*5
 
     property double max_y: 100
     property double min_y: 0
 
-    height: Math.round(Screen.pixelDensity*2 + r1_text.height) + 2*space
+    height: Math.round(pixel_density*2 + r1_text.height) + 2*space
     width: Math.round(parent.width) + 2*space
 
     Drag.active: true
@@ -39,7 +39,7 @@ Item {
         Rectangle {
             id: ruler
 
-            height: Math.round(Screen.pixelDensity)
+            height: pixel_density
             width: Math.round(parent.width - r1.width / 2.0)
             radius: height / 2.0
 
@@ -53,12 +53,12 @@ Item {
             id: r1
 
             height: parent.height
-            width: Math.round(Screen.pixelDensity*4 + r1_text.width)
+            width: Math.round(pixel_density*4 + r1_text.width)
 
             anchors.right: parent.right
             anchors.bottom: parent.bottom
 
-            radius: Screen.pixelDensity
+            radius: pixel_density
             color: ruler.color
         }
 
@@ -156,8 +156,8 @@ Item {
 
         anchors.fill: marker_item
         horizontalOffset: 0
-        verticalOffset: Math.round(Screen.pixelDensity*0.5)
-        radius: Math.round(Screen.pixelDensity*2)
+        verticalOffset: Math.round(pixel_density*0.5)
+        radius: pixel_density*2
         samples: 17
         color: "#80000000"
         source: marker_item

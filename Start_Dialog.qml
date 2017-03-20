@@ -9,11 +9,13 @@ Dialog {
     id: start_dialog
     title: "Start"
 
+    property double max_v: 9.999
+
     contentItem: Rectangle {
         color: "#f2f2f2"
 
         implicitHeight: Math.round(80*Screen.pixelDensity)
-        implicitWidth: Math.round(180*Screen.pixelDensity)
+        implicitWidth: Math.round(190*Screen.pixelDensity)
 
         Flickable {
             height: parent.height - Math.round(2*Screen.pixelDensity) -
@@ -93,12 +95,12 @@ Dialog {
                     width: parent.width
 
                     Label {
-                        text: "Lower Bound [eV]"
+                        text: "Lower Bound [V]"
                         width: parent.parent.label_width
                     }
 
                     Label {
-                        text: "Upper Bound [eV]"
+                        text: "Upper Bound [V]"
                         width: parent.parent.label_width
                     }
 
@@ -114,7 +116,7 @@ Dialog {
 
                         validator: DoubleValidator{
                             bottom: 0
-                            top: 23.0
+                            top: 10.0
                         }
 
                         onFocusChanged: correct_bounds()
@@ -127,7 +129,7 @@ Dialog {
 
                         validator: DoubleValidator{
                             bottom: 0
-                            top: 23.0
+                            top: 10.0
                         }
 
                         onFocusChanged: correct_bounds()
@@ -161,7 +163,7 @@ Dialog {
                     width: parent.width
 
                     Label {
-                        text: "Pedestal Voltage [V]"
+                        text: "Analizer Pass Energy [eV]"
                         width: parent.parent.label_width
                     }
 
@@ -176,7 +178,7 @@ Dialog {
                     }
 
                     TextField {
-                        id: ped_volt_txt
+                        id: analyzer_pass_e_txt
                         width: l_bound_txt.width
                         text: "0"
 
@@ -367,7 +369,10 @@ Dialog {
             anchors.bottom: parent.bottom
             x: cancel.x - width - parent.button_space
 
-            onReleased: set_start()
+            onReleased: {
+                set_start()
+                start_dialog.close()
+            }
         }
     }
 
@@ -377,7 +382,7 @@ Dialog {
             operator_name_txt.text = controller.operatorName()
             spec_name_txt.text = controller.specterName()
 
-            ped_volt_txt.text = controller.pedestalVoltage()
+            analyzer_pass_e_txt.text = controller.analyzerPassEnergy()
             chn_volt_txt.text = controller.channeltronVoltage()
             h_current_txt.text = controller.heliumCurrent()
 
@@ -405,8 +410,8 @@ Dialog {
         var l_bound_n = Number(l_bound_txt.text)
         var u_bound_n = Number(u_bound_txt.text)
 
-        l_bound_n = l_bound_n > 34 ? 34 : l_bound_n
-        u_bound_n = u_bound_n > 34 ? 34 : u_bound_n
+        l_bound_n = l_bound_n > max_v ? max_v : l_bound_n
+        u_bound_n = u_bound_n > max_v ? max_v : u_bound_n
 
         if (l_bound_n > u_bound_n)
         {
@@ -425,7 +430,7 @@ Dialog {
         controller.setOperatorName(operator_name_txt.text)
         controller.setSpecterName(spec_name_txt.text)
 
-        controller.setPedestalVoltage(Number(ped_volt_txt.text))
+        controller.setAnalyzerPassEnergy(Number(analyzer_pass_e_txt.text))
         controller.setChanneltronVoltage(Number(chn_volt_txt.text))
         controller.setHeliumCurrent(Number(h_current_txt.text))
 
@@ -436,8 +441,16 @@ Dialog {
         var e_min = 1.0*Number(l_bound_txt.text)
         var n_ste = 1.0*Number(n_points_txt.text)
 
+        e_max = e_max > max_v ? max_v : e_max
+        e_min = e_min > max_v ? max_v : e_min
+
+        if (e_max == e_min)
+        {
+            e_max = e_max + e_max*0.01
+        }
+
         n_ste = n_ste < 2 ? 2 : n_ste
-        var e_ste = (e_max - e_min) / (n_ste - 1)
+        var e_ste = (e_max - e_min) / (n_ste - 1.0)
 
         controller.setLowerEnergyBound(e_min)
         controller.setUpperEnergyBound(e_max)

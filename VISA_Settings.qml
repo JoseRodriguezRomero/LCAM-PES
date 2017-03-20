@@ -10,8 +10,8 @@ Dialog {
     title: "VISA Settings"
 
     contentItem: Rectangle {
-        implicitHeight: Math.round(Screen.pixelDensity*50)
-        implicitWidth: Math.round(Screen.pixelDensity*180)
+        implicitHeight: Math.round(pixel_density*55)
+        implicitWidth: Math.round(pixel_density*170)
         color: "#f2f2f2"
 
         Item {
@@ -20,16 +20,16 @@ Dialog {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
 
-            height: parent.height - Math.round(Screen.pixelDensity*2)
-            width:  parent.width - Math.round(Screen.pixelDensity*4)
+            height: parent.height - Math.round(pixel_density*2)
+            width:  parent.width - Math.round(pixel_density*4)
 
-            property int button_space: Screen.pixelDensity*2
+            property int button_space: pixel_density*2
 
             Button {
                 id: visa_cancel
 
                 height: start_button.height
-                width: Math.round(Screen.pixelDensity*40)
+                width: Math.round(pixel_density*40)
 
                 text: qsTr("Cancel")
 
@@ -91,42 +91,74 @@ Dialog {
                 anchors.top: parent.top
 
                 Item {
-                    width: parent.width - Math.round(Screen.pixelDensity*10)
-                    height: parent.height - Math.round(Screen.pixelDensity*10)
+                    width: parent.width - Math.round(pixel_density*10)
+                    height: parent.height - Math.round(pixel_density*10)
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.verticalCenter
 
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.top: parent.top
-                        spacing: Math.round(Screen.pixelDensity*20)
+                    Grid {
+                        rows: 2
+                        anchors.fill: parent
+                        spacing: pixel_density*4
 
-                        Column {
-                            id: visa_c1
-                            spacing: Screen.pixelDensity*2
+                        horizontalItemAlignment: Grid.AlignLeft
+                        verticalItemAlignment: Grid.AlignTop
+
+                        Item {
+                            height: Math.round(pixel_density*12.5)
+                            width: Math.round(pixel_density*75)
 
                             Label {
                                 text: qsTr("asciipar4")
+                                anchors.left: parent.left
+                                anchors.top: parent.top
                             }
 
                             TextField {
                                 id: asciipar4_txt
-                                width: Screen.pixelDensity*65
+                                width: pixel_density*65
+
+                                anchors.left: parent.left
+                                anchors.bottom: parent.bottom
                             }
                         }
 
-                        Column {
-                            id: visa_c2
-                            spacing: visa_c1.spacing
+                        Item {
+                            height: Math.round(pixel_density*12.5)
+                            width: Math.round(pixel_density*75)
 
                             Label {
                                 text: qsTr("counter")
+                                anchors.left: parent.left
+                                anchors.top: parent.top
                             }
 
                             TextField {
                                 id: counter_txt
                                 width: asciipar4_txt.width
+
+                                anchors.left: parent.left
+                                anchors.bottom: parent.bottom
+                            }
+                        }
+
+                        Item {
+                            height: Math.round(pixel_density*12.5)
+                            width: Math.round(pixel_density*30)
+
+                            Label {
+                                text: qsTr("iongauge")
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                            }
+
+                            TextField {
+                                id: iongauge_txt
+                                width: asciipar4_txt.width
+
+                                anchors.left: parent.left
+                                anchors.bottom: parent.bottom
                             }
                         }
                     }
@@ -147,6 +179,10 @@ Dialog {
         counter_txt.text = text
     }
 
+    function set_iongauge_text(text) {
+        iongauge_txt.text = text
+    }
+
     function check_open_status() {
         if (controller.counterIsReachable())
         {
@@ -164,6 +200,15 @@ Dialog {
         else
         {
             asciipar4_txt.color = Material.color(Material.Red)
+        }
+
+        if (controller.iongaugeIsReachable())
+        {
+            iongauge_txt.color = Material.color(Material.Green)
+        }
+        else
+        {
+            iongauge_txt.color = Material.color(Material.Red)
         }
     }
 }

@@ -1,3 +1,4 @@
+#include <QLocale>
 #include <QQmlContext>
 #include <QApplication>
 #include <QQmlApplicationEngine>
@@ -12,6 +13,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     Controller controller;
 
+    QLocale::setDefault(QLocale::c());
     engine.rootContext()->setContextProperty("controller",&controller);
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 

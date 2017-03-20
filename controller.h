@@ -31,6 +31,7 @@ class Controller : public QObject
 private:
     VISA_Resouce counter;
     VISA_Resouce asciipar4;
+    VISA_Resouce ion_gauge;
 
     QTimer step_timer;
     uint current_point;
@@ -41,7 +42,7 @@ private:
 
     QString operator_name, specter_name;
 
-    double pedestal_voltage;                //in volts
+    double analyzer_pass_e;                 //in volts
     double channeltron_voltage;             //in volts
 
     double v_m_field, h_m_field;            //in tesla
@@ -57,6 +58,7 @@ private:
     QQmlApplicationEngine *engine;
 
     QVector<QVector<double>> data;
+    QVector<double> pressure;
 
     QThread thread;
     bool is_running;
@@ -69,6 +71,7 @@ public:
 
     Q_INVOKABLE void setCounterName(const QString &rscr_name);
     Q_INVOKABLE void setAsciipar4Name(const QString &rscr_name);
+    Q_INVOKABLE void setIongaugeName(const QString &rscr_name);
 
     Q_INVOKABLE const QString operatorName() const;
     Q_INVOKABLE const QString specterName() const;
@@ -76,7 +79,7 @@ public:
     Q_INVOKABLE void setOperatorName(const QString &operator_name);
     Q_INVOKABLE void setSpecterName(const QString &specter_name);
 
-    Q_INVOKABLE double pedestalVoltage() const;
+    Q_INVOKABLE double analyzerPassEnergy() const;
     Q_INVOKABLE double channeltronVoltage() const;
     Q_INVOKABLE double heliumCurrent() const;
 
@@ -86,7 +89,7 @@ public:
     Q_INVOKABLE void setStepTime(int step_time);
     Q_INVOKABLE void setNumSpecters(int num_specters);
 
-    Q_INVOKABLE void setPedestalVoltage(double pedestal_voltage);
+    Q_INVOKABLE void setAnalyzerPassEnergy(double analyzer_pass_e);
     Q_INVOKABLE void setChanneltronVoltage(double channeltron_voltage);
     Q_INVOKABLE void setHeliumCurrent(double he_current);
 
@@ -112,9 +115,11 @@ public:
 
     Q_INVOKABLE const QString counterResourceName() const;
     Q_INVOKABLE const QString asciipar4ResourceName() const;
+    Q_INVOKABLE const QString iongaugeResourceName() const;
 
     Q_INVOKABLE bool counterIsReachable();
     Q_INVOKABLE bool asciipar4IsReachable();
+    Q_INVOKABLE bool iongaugeIsReachable();
 
     Q_INVOKABLE void start();
     Q_INVOKABLE void stop();
@@ -137,12 +142,14 @@ private:
     void closeCounter();
     void openCounter();
 
+    void readGaugePressure();   // reads from the serial ports the pressure
+    void getGaugePressure();    // tells the Arduino to get a new measurement
+
     void readData();
     void saveBackup();
 
     void saveTxt(const QString &file_name);
     void saveXml(const QString &file_name);
-    void saveCsv(const QString &file_name);
 };
 
 #endif // CONTROLLER_H

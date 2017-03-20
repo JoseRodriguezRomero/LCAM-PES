@@ -1,6 +1,6 @@
 import QtQuick 2.7
 import QtQuick.Window 2.0
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.1
 import QtQuick.Controls.Material 2.0
 import QtGraphicalEffects 1.0
 
@@ -38,7 +38,7 @@ Button {
             onCheckedChanged: {
                 if (checked)
                 {
-                    vr_check.checked = hr_check.checked ? false : false
+                    vr_check.checked = false
                 }
                 specter_chart.show_horizontal_rulers(checked)
             }
@@ -51,20 +51,84 @@ Button {
             onCheckedChanged: {
                 if (checked)
                 {
-                    hr_check.checked = hr_check.checked ? false : false
+                    hr_check.checked = false
                 }
                 specter_chart.show_vertical_rulers(checked)
             }
         }
 
+        MenuSeparator {}
+
         MenuItem {
-            text: "Log X Scale"
+            text: "DAC Voltage"
+            id: v_ich_menu_item
             checkable: true
+            checked: true
+
+            onCheckedChanged: {
+                if (checked)
+                {
+                    ke_menu_item.checked = false
+                    be_menu_item.checked = false
+                    specter_chart.set_to_standard()
+                }
+                else
+                {
+                    if (!(ke_menu_item.checked || be_menu_item.checked))
+                    {
+                        checked = true
+                    }
+                }
+            }
         }
+
         MenuItem {
-            text: "Log Y Scale"
+            text: "Kinetic Energy"
+            id: ke_menu_item
             checkable: true
+            checked: false
+
+            onCheckedChanged: {
+                if (checked)
+                {
+                    v_ich_menu_item.checked = false
+                    be_menu_item.checked = false
+                    specter_chart.set_to_kineticE()
+                }
+                else
+                {
+                    if (!(v_ich_menu_item.checked || be_menu_item.checked))
+                    {
+                        checked = true
+                    }
+                }
+            }
         }
+
+        MenuItem {
+            text: "Binding Energy"
+            id: be_menu_item
+            checkable: true
+            checked: false
+
+            onCheckedChanged: {
+                if (checked)
+                {
+                    v_ich_menu_item.checked = false
+                    ke_menu_item.checked = false
+                    specter_chart.set_to_bindingE()
+                }
+                else
+                {
+                    if (!(v_ich_menu_item.checked || ke_menu_item.checked))
+                    {
+                        checked = true
+                    }
+                }
+            }
+        }
+
+        MenuSeparator {}
 
         MenuItem {
             text: "VISA Settings"
@@ -73,6 +137,7 @@ Button {
             onReleased: {
                 visa_settings.set_asciipar_text(controller.asciipar4ResourceName())
                 visa_settings.set_counter_text(controller.counterResourceName())
+                visa_settings.set_iongauge_text(controller.iongaugeResourceName())
                 visa_settings.open()
             }
         }

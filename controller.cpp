@@ -5,6 +5,7 @@
 
 #define DEFAULT_COUNTER_RSRC_NAME       "counter"
 #define DEFAULT_ASCIIPAR4_RSRC_NAME     "asciipar4"
+#define DEFAULT_IONGAUGE_RSRC_NAME      "iongauge"
 
 #define DEFAULT_UPPER_BOUND             1.0
 #define DEFAULT_LOWER_BOUND             0.0
@@ -19,7 +20,7 @@
 #define DEFAULT_H_FIELD                 0.0
 #define DEFAULT_V_FIELD                 0.0
 
-#define DEFAULT_PEDESTAL_V              0.0
+#define DEFAULT_ANALIZER_PASS_E         0.0
 #define DEFAULT_HE_CURRENT              0.0
 #define DEFAULT_CHANNELTRON_V           0.0
 
@@ -33,11 +34,12 @@ Controller::Controller(QObject *parent) :
 
     counter.setRsrcName(DEFAULT_COUNTER_RSRC_NAME);
     asciipar4.setRsrcName(DEFAULT_ASCIIPAR4_RSRC_NAME);
+    ion_gauge.setRsrcName(DEFAULT_IONGAUGE_RSRC_NAME);
 
     operator_name = DEFAULT_OPERATOR_NAME;
     specter_name = DEFAULT_SPECTER_NAME;
 
-    pedestal_voltage = DEFAULT_PEDESTAL_V;
+    analyzer_pass_e = DEFAULT_ANALIZER_PASS_E;
     channeltron_voltage = DEFAULT_CHANNELTRON_V;
     he_current = DEFAULT_HE_CURRENT;
 
@@ -71,7 +73,7 @@ Controller::~Controller()
 {
     current_point = 0;
     closeCounter();
-    setEnergy();\
+    setEnergy();
 
     is_running = false;
     while (thread.isRunning())
@@ -99,6 +101,11 @@ void Controller::setAsciipar4Name(const QString &rscr_name)
     asciipar4.setRsrcName(rscr_name);
 }
 
+void Controller::setIongaugeName(const QString &rscr_name)
+{
+    ion_gauge.setRsrcName(rscr_name);
+}
+
 const QString Controller::operatorName() const
 {
     return operator_name;
@@ -119,9 +126,9 @@ void Controller::setSpecterName(const QString &specter_name)
     this->specter_name = specter_name;
 }
 
-double Controller::pedestalVoltage() const
+double Controller::analyzerPassEnergy() const
 {
-    return pedestal_voltage;
+    return analyzer_pass_e;
 }
 
 double Controller::channeltronVoltage() const
@@ -154,9 +161,9 @@ void Controller::setNumSpecters(int num_specters)
     this->num_specters = num_specters;
 }
 
-void Controller::setPedestalVoltage(double pedestal_voltage)
+void Controller::setAnalyzerPassEnergy(double analyzer_pass_e)
 {
-    this->pedestal_voltage = pedestal_voltage;
+    this->analyzer_pass_e = analyzer_pass_e;
 }
 
 void Controller::setChanneltronVoltage(double channeltron_voltage)
@@ -249,6 +256,11 @@ const QString Controller::asciipar4ResourceName() const
     return asciipar4.resourceName();
 }
 
+const QString Controller::iongaugeResourceName() const
+{
+    return ion_gauge.resourceName();
+}
+
 bool Controller::counterIsReachable()
 {
     return counter.isReachable();
@@ -257,6 +269,11 @@ bool Controller::counterIsReachable()
 bool Controller::asciipar4IsReachable()
 {
     return asciipar4.isReachable();
+}
+
+bool Controller::iongaugeIsReachable()
+{
+    return ion_gauge.isReachable();
 }
 
 void Controller::start()
@@ -274,6 +291,15 @@ void Controller::start()
     data.resize(num_specters);
 
     QObject *object = engine->rootObjects().first();
+    QMetaObject::invokeMethod(object,"set_specter_axisY_max",
+                              Q_ARG(QVariant,10));
+    QMetaObject::invokeMethod(object,"set_specter_axisY_min",
+                              Q_ARG(QVariant,0));
+    QMetaObject::invokeMethod(object,"set_specter_axisX_max",
+                              Q_ARG(QVariant,e_max));
+    QMetaObject::invokeMethod(object,"set_specter_axisX_min",
+                              Q_ARG(QVariant,e_min));
+
     QMetaObject::invokeMethod(object,"has_started");
     QMetaObject::invokeMethod(object,"set_specter_points",
                               Q_ARG(QVariant,n_points));
@@ -283,21 +309,7 @@ void Controller::start()
         double x_val = e_min + e_ste*i;
         old_val.append(QPointF(x_val,0.0));
         new_val.append(QPointF(x_val,0.0));
-
-        QMetaObject::invokeMethod(object,"set_specter_point",
-                                  Q_ARG(QVariant,i),
-                                  Q_ARG(QVariant,x_val),
-                                  Q_ARG(QVariant,0.0));
     }
-
-    QMetaObject::invokeMethod(object,"set_specter_lin_axisY_max",
-                              Q_ARG(QVariant,10));
-    QMetaObject::invokeMethod(object,"set_specter_lin_axisY_min",
-                              Q_ARG(QVariant,0));
-    QMetaObject::invokeMethod(object,"set_specter_lin_axisX_max",
-                              Q_ARG(QVariant,e_max));
-    QMetaObject::invokeMethod(object,"set_specter_lin_axisX_min",
-                              Q_ARG(QVariant,e_min));
 
     step_timer.setInterval(step_time);
 
@@ -330,12 +342,7 @@ void Controller::save(QString folder_path, QString file_name,
     {
         saveTxt(file_name);
     }
-
-    else if (extension == ".csv")
-    {
-        saveCsv(file_name);
-    }
-    else if (extension == ".xml")
+    else
     {
         saveXml(file_name);
     }
@@ -351,13 +358,20 @@ void Controller::setStartInfo()
                               Q_ARG(QVariant,num_specters));
     QMetaObject::invokeMethod(object,"set_time_per_step",
                               Q_ARG(QVariant,step_time));
+
+    uint n_points = round((e_max-e_min)/e_ste) + 1;
+    double elapsed_time = (n_points - current_point)*step_time;
+    elapsed_time += (num_specters-current_specter)*(n_points*step_time);
+    elapsed_time /= 1000;
+
+    QMetaObject::invokeMethod(object,"set_elapsed_time",
+                              Q_ARG(QVariant,elapsed_time));
 }
 
 void Controller::onStep()
 {
     if (!is_running)
     {
-        current_point = 0;
         closeCounter();
         setEnergy();
         QObject *object = engine->rootObjects().first();
@@ -373,16 +387,17 @@ void Controller::onStep()
     current_point++;
     if (current_point >= n_points)
     {
-        current_point = 0;
         if (current_specter >= num_specters)
         {
             is_running = false;
         }
         else
         {
+            current_point = 0;
             current_specter++;
-            saveBackup();
         }
+
+        saveBackup();
     }
 
     setStartInfo();
@@ -395,35 +410,67 @@ void Controller::onStep()
 void Controller::setEnergy()
 {
     double a = float((2<<17)-1) / 9.9999;    //resolution of the DAC
-    double z1 = (e_min+(pedestal_voltage+current_point*e_ste))*a;
+    double z1 = (e_min+(current_point*e_ste))*a;
     char d = '0';
-    z1 = floor(z1);
-    char r0 = z1-floor(z1/8.0)*8+d;
-    z1 = floor(z1/8.0);
-    char r1 = z1-floor(z1/8.0)*8+d;
-    z1 = floor(z1/8.0);
-    char r2 = z1-floor(z1/8.0)*8+d;
-    z1 = floor(z1/8.0);
-    char r3 = z1-floor(z1/8.0)*8+d;
-    z1 = floor(z1/8.0);
-    char r4 = z1-floor(z1/8.0)*8+d;
-    z1 = floor(z1/8.0);
-    char r5 = z1-floor(z1/8.0)*8+d;
 
-    char buffer[MAX_BUFFER] = {d,d,d,d,d,d,d,d,d,d,r5,r4,r3,r2,r1,r0,10};
+    if (!is_running)
+    {
+        z1 = 0;
+    }
+
+    char buffer[MAX_BUFFER];
+    buffer[16] = '\n';
+    for (int i = 0; i < 16; i++)
+    {
+        z1 = floor(z1);
+        char r = z1-floor(z1/8.0)*8+d;
+        z1 = floor(z1/8.0);
+
+        buffer[15-i] = r;
+    }
+
     asciipar4.writeData((char*)buffer);
 }
 
 void Controller::closeCounter()
 {
-    ViByte buffer[MAX_BUFFER] = {70,78,54,10,13};
+    ViByte buffer[MAX_BUFFER] = {'F','N','6','\n','\r'};
     counter.writeData((ViChar*)buffer);
 }
 
 void Controller::openCounter()
 {
-    ViByte buffer[MAX_BUFFER] = {82,69,70,78,49,50,10,13};
+    ViByte buffer[MAX_BUFFER] = {'R','E','F','N','1','2','\n','\r'};
     counter.writeData((ViChar*)buffer);
+}
+
+void Controller::readGaugePressure()
+{
+    QString data = ion_gauge.readData();
+    while (data[data.length()-1] != '\n')
+    {
+        getGaugePressure();
+        data = ion_gauge.readData();
+    }
+
+    int v = data.toInt();
+    double p = (3.81E-7)*pow(v,3)-(1.5E-4)*pow(v,3)+(2.52E-2)*v-2.6;
+    p = pow(10.0,p);
+
+    int n = ((e_max - e_min) / e_ste) + 1;
+    double t = (current_specter*n + current_point)*step_time*1.0E-3;
+
+    pressure.append(p);
+
+    QObject *object = engine->rootObjects().first();
+    QMetaObject::invokeMethod(object,"add_pressure_point",
+                              Q_ARG(QVariant,t),
+                              Q_ARG(QVariant,p));
+}
+
+void Controller::getGaugePressure()
+{
+
 }
 
 void Controller::readData()
@@ -496,7 +543,7 @@ void Controller::loadBackup()
     he_current = root.attribute("he_current").toDouble();
     v_m_field = root.attribute("v_m_field").toDouble();
     h_m_field = root.attribute("h_m_field").toDouble();
-    pedestal_voltage = root.attribute("pedestal_voltage").toDouble();
+    analyzer_pass_e = root.attribute("analyzer_pass_e").toDouble();
     channeltron_voltage = root.attribute("channeltron_voltage").toDouble();
     step_time = root.attribute("step_time").toUInt();
     e_max = root.attribute("e_max").toDouble();
@@ -546,9 +593,9 @@ void Controller::loadBackup()
     QObject *object = engine->rootObjects().first();
     QMetaObject::invokeMethod(object,"set_specter_points",
                               Q_ARG(QVariant,n));
-    QMetaObject::invokeMethod(object,"set_specter_lin_axisX_max",
+    QMetaObject::invokeMethod(object,"set_specter_axisX_max",
                               Q_ARG(QVariant,e_max));
-    QMetaObject::invokeMethod(object,"set_specter_lin_axisX_min",
+    QMetaObject::invokeMethod(object,"set_specter_axisX_min",
                               Q_ARG(QVariant,e_min));
 
     for (int i = 0; i < n; i++)
@@ -570,6 +617,9 @@ void Controller::loadBackup()
                                   Q_ARG(QVariant,old_val[i].x()),
                                   Q_ARG(QVariant,old_val[i].y()));
     }
+
+    current_point = data.last().length();
+    current_specter = data.length();
 
     setStartInfo();
 }
@@ -625,7 +675,7 @@ void Controller::saveTxt(const QString &file_name)
     write_line("He current: ",he_current,stream);
     write_line("Vertical Mag. field: ",v_m_field,stream);
     write_line("Horizontal Mag. field: ",h_m_field,stream);
-    write_line("Pedestal Voltage: ",pedestal_voltage,stream);
+    write_line("Analizer Pass Energy: ",analyzer_pass_e,stream);
     write_line("Channeltron Voltage: ",channeltron_voltage,stream);
     write_line("Time per step: ",double(step_time),stream);
     stream << "\n";
@@ -690,7 +740,7 @@ void Controller::saveXml(const QString &file_name)
     root.setAttribute("he_current",he_current);
     root.setAttribute("v_m_field",v_m_field);
     root.setAttribute("h_m_field",h_m_field);
-    root.setAttribute("pedestal_voltage",pedestal_voltage);
+    root.setAttribute("analyzer_pass_e",analyzer_pass_e);
     root.setAttribute("channeltron_voltage",channeltron_voltage);
     root.setAttribute("step_time",step_time);
     root.setAttribute("e_max",e_max);
@@ -735,10 +785,4 @@ void Controller::saveXml(const QString &file_name)
     QTextStream stream(&file);
     stream << document.toString();
     file.close();
-}
-
-void Controller::saveCsv(const QString &file_name)
-{
-    //TODO
-
 }

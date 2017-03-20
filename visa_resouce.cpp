@@ -19,7 +19,7 @@ QString VISA_Resouce::ViResourceName() const
 void VISA_Resouce::writeData(const QString &data)
 {
     openResource();
-    ViByte buffer_data[data.length()];
+    ViByte *buffer_data = new ViByte[data.length()];
     ViUInt32 n_to_write,n_written;
     n_to_write = data.length();
 
@@ -31,6 +31,8 @@ void VISA_Resouce::writeData(const QString &data)
     status = viFlush(vi,VI_WRITE_BUF);
     status = viWrite(vi,buffer_data,n_to_write,&n_written);
     closeResource();
+
+    delete[] buffer_data;
 }
 
 QString VISA_Resouce::readData()
@@ -40,8 +42,8 @@ QString VISA_Resouce::readData()
     ViPBuf p_buff = (ViByte*)buffer;
     ViUInt32 count;
 
+    viRead(vi,p_buff,MAX_BUFFER-1,&count);
     viFlush(vi,VI_READ_BUF);
-    viRead(vi,p_buff,MAX_BUFFER,&count);
     closeResource();
 
     buffer[count] = '\0';
@@ -60,14 +62,13 @@ const QString &VISA_Resouce::resourceName() const
 
 void VISA_Resouce::openResource()
 {
-    char vi_name[vi_rsc_name.length()];
+    char *vi_name = new char[vi_rsc_name.length()];
     strcpy(vi_name,vi_rsc_name.toStdString().data());
 
-    do
-    {
-     status = viOpenDefaultRM(&defaultRM);
-    } while (status != VI_SUCCESS);
+    status = viOpenDefaultRM(&defaultRM);
     status = viOpen(defaultRM,vi_name,VI_NULL,VI_NULL,&vi);
+
+    delete[] vi_name;
 }
 
 void VISA_Resouce::closeResource()

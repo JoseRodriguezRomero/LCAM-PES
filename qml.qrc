@@ -9,5 +9,6 @@
         <file>Markers.qml</file>
         <file>HorizontalDistanceMarker.qml</file>
         <file>Start_Dialog.qml</file>
+        <file>PressureChart.qml</file>
     </qresource>
 </RCC>

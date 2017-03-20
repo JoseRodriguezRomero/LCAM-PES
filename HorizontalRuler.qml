@@ -15,10 +15,10 @@ Item {
     property double max_x: 100
     property double min_x: 0
 
-    property int space: Math.round(Screen.pixelDensity*5)
+    property int space: pixel_density*5
 
     height: Math.round(parent.height) + 2*space
-    width:  Math.round(r1_text.width + Screen.pixelDensity*4) + 2*space
+    width:  Math.round(r1_text.width + pixel_density*4) + 2*space
 
     Drag.active: true
     property double rel_x: 0.75
@@ -43,7 +43,7 @@ Item {
             color: parent.parent.color
 
             height: Math.round(parent.height - r1.height / 2.0)
-            width: Math.round(Screen.pixelDensity)
+            width: pixel_density
 
             anchors.left: parent.left
             anchors.bottom: parent.bottom
@@ -55,7 +55,7 @@ Item {
             id: r1
             color: parent.parent.color
 
-            height: r1_text.height + Math.round(Screen.pixelDensity*2)
+            height: r1_text.height + pixel_density*2
             width: parent.width
 
             radius: Screen.pixelDensity
@@ -155,8 +155,8 @@ Item {
 
         anchors.fill: marker_item
         horizontalOffset: 0
-        verticalOffset: Math.round(Screen.pixelDensity*0.5)
-        radius: Math.round(Screen.pixelDensity*2)
+        verticalOffset: Math.round(pixel_density*0.5)
+        radius: pixel_density*2
         samples: 17
         color: "#80000000"
         source: marker_item

@@ -23,9 +23,11 @@ public:
     void setRsrcName(const QString &vi_rsc_name);
     const QString& resourceName() const;
 
+    bool isReachable();
+
+private:
     void openResource();
     void closeResource();
-    bool isReachable();
 };
 
 #endif // VISA_RESOUCE_H

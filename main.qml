@@ -13,8 +13,11 @@ ApplicationWindow {
     height: minimumHeight
     title: qsTr("LCAM - PES")
 
-    minimumHeight: Math.round(Screen.pixelDensity*130)
-    minimumWidth: Math.round(Screen.pixelDensity*210)
+    property int pixel_density: pixel_density =
+                                Math.round(Screen.pixelDensity)
+
+    minimumHeight: pixel_density*130
+    minimumWidth: pixel_density*210
 
     Material.theme: Material.Light
     Material.primary: Material.Teal
@@ -24,7 +27,7 @@ ApplicationWindow {
     Pane {
         id: top_panel
         width: parent.width
-        height: Math.round(Screen.pixelDensity*15)
+        height: pixel_density*15
 
         x: 0
         y: 0
@@ -63,7 +66,7 @@ ApplicationWindow {
 
             property int min_space: parent.width*0.025
 
-            width: Math.round(Screen.pixelDensity*60)
+            width: pixel_density*60
             height: parent.height
 
             Material.elevation: 3
@@ -76,11 +79,10 @@ ApplicationWindow {
                 id: start_button
 
                 width: parent.width
-                height: Math.round(Screen.pixelDensity*12.5)
+                height: pixel_density*12.5
 
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: parent.y + parent.height - height -
-                   Math.round(Screen.pixelDensity*2.0)
+                y: parent.y + parent.height - height - pixel_density*2.0
 
                 text: "Start"
 
@@ -139,7 +141,7 @@ ApplicationWindow {
 
             Text {
                 id: elapsed_time
-                text: qsTr("Elapsed time: 0 min")
+                text: qsTr("Elapsed time: 0:00")
 
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: time_per_step.y + energy_step.height*1.25
@@ -149,10 +151,19 @@ ApplicationWindow {
         SpecterChart {
             id: specter_chart
             width: parent.width - side_panel.width
-            height: parent.height
+            height: parent.height - pressure_chart.height
 
             anchors.left: parent.left
             anchors.top: parent.top
+        }
+
+        PressureChart {
+            id: pressure_chart
+            width: specter_chart.width
+            height: pixel_density*47
+
+            anchors.left: parent.left
+            anchors.top: specter_chart.bottom
         }
     }
 
@@ -170,8 +181,7 @@ ApplicationWindow {
 
         title: "Save"
         nameFilters: [ "Plain Text (*.txt)" ,
-                       "XML Document (*xml)",
-                       "Comma Separarated Values (*.csv)"]
+                       "XML Document (*xml)"]
 
         onAccepted: {
             var name_filter
@@ -179,8 +189,6 @@ ApplicationWindow {
                 name_filter = ".txt"
             else if (selectedNameFilter == "XML Document (*xml)")
                 name_filter = ".xml"
-            else
-                name_filter = ".csv"
 
             controller.save(folder,fileUrl,name_filter)
         }
@@ -193,7 +201,7 @@ ApplicationWindow {
     function set_energy_step(e_ste) {
         var aux_string = "Energy Step: "
         aux_string += Number(e_ste).toLocaleString(
-                    Qt.locale("en_US"),'g')
+                    Qt.locale("en_US"),'E',2)
         aux_string += " eV"
         energy_step.text = aux_string
     }
@@ -211,6 +219,43 @@ ApplicationWindow {
         aux_string += Number(ste_time).toString()
         aux_string += " ms"
         time_per_step.text = aux_string
+    }
+
+    function set_elapsed_time(elapsed) {
+        var aux_string = "Elapsed time: "
+        var aux_mins = Math.floor(elapsed / 60.0)
+        var aux_secs = Math.floor(elapsed % 60)
+
+        if (aux_mins < 60)
+        {
+            aux_string += aux_mins.toString()
+        }
+        else
+        {
+            var aux_hours = Math.floor(aux_mins / 60.0)
+            aux_mins = aux_mins % 60
+
+            aux_string += aux_hours
+            if (aux_mins < 10)
+            {
+                aux_string += ":0" + aux_mins.toString()
+            }
+            else
+            {
+                aux_string += ":" + aux_mins.toString()
+            }
+        }
+
+        if (aux_secs < 10)
+        {
+            aux_string += ":0" + aux_secs.toString()
+        }
+        else
+        {
+            aux_string += ":" + aux_secs.toString()
+        }
+
+        elapsed_time.text = aux_string
     }
 
     function has_started() {
@@ -233,21 +278,30 @@ ApplicationWindow {
 
     function set_specter_points(n) {
         specter_chart.set_point_count(n)
+        pressure_chart.reset()
     }
 
-    function set_specter_lin_axisY_max(max) {
-        specter_chart.set_lin_axisY_max(max)
+    function add_pressure_point(t, p) {
+        pressure_chart.addPoint(t, p)
     }
 
-    function set_specter_lin_axisY_min(min) {
-        specter_chart.set_lin_axisY_min(min)
+    function clear_pressure_chart() {
+        pressure_chart.reset()
     }
 
-    function set_specter_lin_axisX_max(max) {
-        specter_chart.set_lin_axisX_max(max)
+    function set_specter_axisY_max(max) {
+        specter_chart.set_axisY_max(max)
     }
 
-    function set_specter_lin_axisX_min(min) {
-        specter_chart.set_lin_axisX_min(min)
+    function set_specter_axisY_min(min) {
+        specter_chart.set_axisY_min(min)
+    }
+
+    function set_specter_axisX_max(max) {
+        specter_chart.set_axisX_max(max)
+    }
+
+    function set_specter_axisX_min(min) {
+        specter_chart.set_axisX_min(min)
     }
 }
