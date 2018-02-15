@@ -1,5 +1,7 @@
 #define MAX_BUFFER              32
 
+#include <QDebug>
+
 #include "visa_resouce.h"
 
 VISA_Resouce::VISA_Resouce()
@@ -62,8 +64,9 @@ const QString &VISA_Resouce::resourceName() const
 
 void VISA_Resouce::openResource()
 {
-    char *vi_name = new char[vi_rsc_name.length()];
+    char *vi_name = new char[vi_rsc_name.length()+1];
     strcpy(vi_name,vi_rsc_name.toStdString().data());
+    vi_name[vi_rsc_name.length()] = '\0';
 
     status = viOpenDefaultRM(&defaultRM);
     status = viOpen(defaultRM,vi_name,VI_NULL,VI_NULL,&vi);

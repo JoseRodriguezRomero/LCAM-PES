@@ -5,9 +5,13 @@ QT += qml quick charts widgets xml
 CONFIG += c++11 qtquickcompiler
 
 win32 {
-    INCLUDEPATH += "C:\Program Files\IVI Foundation\VISA\WinNT\Include"
-    LIBS += "C:\Program Files\IVI Foundation\VISA\WinNT\lib\msc\visa32.lib"
-    #LIBS += "C:\Program Files\IVI Foundation\VISA\WinNT\lib\bc\visa32.lib"
+    contains(QT_ARCH, i386) {
+        INCLUDEPATH += "D:\National Instruments\VISA\WinNT\Include"
+        LIBS += "D:\National Instruments\VISA\WinNT\Lib_x64\msc\nivisa64.lib"
+    } else {
+        INCLUDEPATH += "D:\National Instruments\VISA\WinNT\Include"
+        LIBS += "D:\National Instruments\VISA\WinNT\Lib_x64\msc\nivisa64.lib"
+    }
 }
 
 linux {
